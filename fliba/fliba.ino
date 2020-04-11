@@ -14,6 +14,7 @@ int xBumpArray[ringBufferSize];
 int yBumpArray[ringBufferSize];
 int deadzone = 5;
 int sensitivity=50;
+bool replicateTriggersToButtons = false;
 
 const bool valuesFromDisplay = true;
 const int leftTriggerInput = 10;
@@ -80,7 +81,10 @@ void loop() {
 
   updateDigitals();
   updateAnalogs();
-
+  if(replicateTriggersToButtons)
+  {
+    updateButtonsFromTriggers();
+  }
 
   updateFromDisplay();
 
@@ -99,6 +103,15 @@ void loop() {
   }
 }
 
+void updateButtonsFromTriggers()
+{
+  bool left = XInput.getTrigger(TRIGGER_LEFT) > 0;
+  bool right = XInput.getTrigger(TRIGGER_RIGHT) > 0;
+  if(XInput.getButton(BUTTON_RB) != right )
+    XInput.setTrigger(TRIGGER_RIGHT, right);
+  if(XInput.getButton(BUTTON_LB) != left )
+    XInput.setTrigger(TRIGGER_LEFT, left);
+}
 
 void updateDigitals()
 {
@@ -112,8 +125,6 @@ void updateDigitals()
 
 void updateAnalogs()
 {
-  static bool lastLeftTrigger = false;
-  static bool lastRightTrigger = false;
   static int minA1Analog = -1;
   static int maxA1Analog = -1;
   static int minA0Analog = -1;
@@ -121,10 +132,10 @@ void updateAnalogs()
   
   int leftTrigger = !digitalRead(leftTriggerInput);
   int rightTrigger =  !digitalRead(rightTriggerInput);
-  if(lastLeftTrigger != leftTrigger) XInput.setTrigger(TRIGGER_LEFT, leftTrigger ? 1 : 0);
-  if(lastRightTrigger != rightTrigger) XInput.setTrigger(TRIGGER_RIGHT,rightTrigger? 1 : 0);
-  lastLeftTrigger = leftTrigger;
-  lastRightTrigger = rightTrigger;
+  if(XInput.getTrigger(TRIGGER_LEFT) != leftTrigger )
+    XInput.setTrigger(TRIGGER_LEFT, leftTrigger);
+  if(XInput.getTrigger(TRIGGER_RIGHT) != rightTrigger )
+    XInput.setTrigger(TRIGGER_RIGHT, rightTrigger);
 
   static int32_t lastJ1x = 0;
   static int32_t lastJ1y = 0;
