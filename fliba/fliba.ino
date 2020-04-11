@@ -22,20 +22,6 @@ const int rightTriggerInput = 3;
 const int loopTimeUpdateInterval = 1000000;
 
 // Button Setup
-const int NumButtons = 10;
-const int Buttons[NumButtons] = {
-  BUTTON_A,
-  BUTTON_B,
-  BUTTON_X,
-  BUTTON_Y,
-  BUTTON_LB,
-  BUTTON_RB,
-  BUTTON_BACK,
-  BUTTON_START,
-  BUTTON_L3,
-  BUTTON_R3,
-};
-
 const int ButtonId2ButtonCode[] = {
   BUTTON_BACK,
   BUTTON_START,
@@ -47,6 +33,7 @@ const int ButtonId2ButtonCode[] = {
   DPAD_DOWN,
   DPAD_LEFT,
   DPAD_RIGHT,
+  BUTTON_LOGO
 };
 
 typedef struct Input2ButtonMap {
