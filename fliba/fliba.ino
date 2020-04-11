@@ -15,11 +15,13 @@ int yBumpArray[ringBufferSize];
 int deadzone = 5;
 int sensitivity=50;
 bool replicateTriggersToButtons = false;
+bool disableBump=false;
+bool settingsActive = false;
 
 const bool valuesFromDisplay = true;
 const int leftTriggerInput = 10;
 const int rightTriggerInput = 3;
-const int loopTimeUpdateInterval = 1000000;
+const int uiUpdateInterval = 100000;
 
 // Button Setup
 const int ButtonId2ButtonCode[] = {
@@ -59,9 +61,9 @@ void loop() {
   /*if (digitalRead(SafetyPin) == LOW) {
     return;
   }*/
-  static unsigned long lastPrintTime = 0;
+  static unsigned long sinceUiUpdate = 0;
   static unsigned long avgTime = 0;
-  unsigned long time = micros();  // Get timestamp for comparison
+  unsigned long startTime = micros();  // Get timestamp for comparison
 
   // DPad
   //XInput.setDpad(dpadPosition == 0, dpadPosition == 1, dpadPosition == 2, dpadPosition == 3)
@@ -79,15 +81,24 @@ void loop() {
   XInput.send();
 
   // calculate loop time 
-  unsigned long loopTime = micros()-time;
+  unsigned long loopTime = micros()-startTime;
   avgTime = (loopTime + avgTime) / 2;
-  lastPrintTime = lastPrintTime + loopTime;
-  if(lastPrintTime > loopTimeUpdateInterval)
+  sinceUiUpdate = sinceUiUpdate + loopTime;
+
+  if(settingsActive && sinceUiUpdate > uiUpdateInterval)
   {
-    lastPrintTime = 0;
-    // TODO; send avg time to nextion
-    ui_setValue("ct.val", String(avgTime));
+    sinceUiUpdate = 0;
+    updateSettingsUI(avgTime);
   }
+}
+
+void updateSettingsUI(unsigned long looptime)
+{
+  ui_setValue("ct.val", String(looptime));
+  ui_setValue("sens.val", String(sensitivity));
+  ui_setValue("sensslider.val", String(sensitivity));
+  ui_setValue("dz.val", String(deadzone));
+  ui_setValue("dzslider.val", String(deadzone));
 }
 
 void updateButtonsFromTriggers()
@@ -124,6 +135,9 @@ void updateAnalogs()
   if(XInput.getTrigger(TRIGGER_RIGHT) != rightTrigger )
     XInput.setTrigger(TRIGGER_RIGHT, rightTrigger);
 
+  if(disableBump)
+    return;
+
   static int32_t lastJ1x = 0;
   static int32_t lastJ1y = 0;
   static int32_t lastJ2y = 0;
@@ -139,8 +153,6 @@ void updateAnalogs()
    //int32_t j2y = analogRead(A2) >> 2; // plunger in display
   //if(lastJ2y != j2y) XInput.setJoystick(JOY_RIGHT, 0, j2y);
   //lastJ2y = j2y;
-
-  
 }
 
 void clearArray(int intArray[], const int arraySize)
@@ -265,6 +277,31 @@ void plungerMoving(int serialCommand[])
   XInput.setJoystick(JOY_RIGHT, 0, dir ? val : 0-val);
 }
 
+void handleSettingsPage(int serialCommand[])
+{
+  settingsActive  = serialCommand[1]>0;
+}
+
+void handleDisableBump(int serialCommand[])
+{
+  disableBump  = serialCommand[1]==0;
+}
+
+void handleSupport4Flippers(int serialCommand[])
+{
+  replicateTriggersToButtons  = serialCommand[1]==0;
+}
+
+void handleSetSensitivity(int serialCommand[])
+{
+  sensitivity = serialCommand[1];
+}
+
+void handleSetDeadzone(int serialCommand[])
+{
+  deadzone = serialCommand[1];
+}
+
 void handleTouchPressed(int serialCommand[])
 {
   int code = serialCommand[1];
@@ -349,6 +386,22 @@ void updateFromDisplay()
     case 5: // touch release
       handleTouchReleased(serialCommand);
       break;
+    case 6: // settings page on/off
+      handleSettingsPage(serialCommand);
+      break;
+    case 7: // enable/diable bumping
+      handleDisableBump(serialCommand);
+      break;
+    case 8: // are rb same as right trigger and same for left side..
+      handleSupport4Flippers(serialCommand);
+      break;
+    case 9: 
+      handleSetSensitivity(serialCommand);
+      break;
+    case 10:
+      handleSetDeadzone(serialCommand);
+      break;
+      
     default:
       Serial.println("unknown command;");
       //readUntilEndOfCommand(); 
