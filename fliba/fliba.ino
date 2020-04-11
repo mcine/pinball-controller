@@ -12,7 +12,7 @@ int xBufferIndex = 0;
 int yBufferIndex = 0;
 int xBumpArray[ringBufferSize];
 int yBumpArray[ringBufferSize];
-int deadzone = 5;
+int deadzone = 12;
 int sensitivity=50;
 bool replicateTriggersToButtons = false;
 bool disableBump=false;
@@ -21,7 +21,7 @@ bool settingsActive = false;
 const bool valuesFromDisplay = true;
 const int leftTriggerInput = 10;
 const int rightTriggerInput = 3;
-const int uiUpdateInterval = 100000;
+const unsigned long  uiUpdateInterval = 100000;
 
 // Button Setup
 const int ButtonId2ButtonCode[] = {
@@ -70,12 +70,12 @@ void loop() {
 
   updateDigitals();
   updateAnalogs();
+  updateFromDisplay();
+
   if(replicateTriggersToButtons)
   {
     updateButtonsFromTriggers();
   }
-
-  updateFromDisplay();
 
   // Send values to PC
   XInput.send();
@@ -84,9 +84,9 @@ void loop() {
   unsigned long loopTime = micros()-startTime;
   avgTime = (loopTime + avgTime) / 2;
   sinceUiUpdate = sinceUiUpdate + loopTime;
-
   if(settingsActive && sinceUiUpdate > uiUpdateInterval)
   {
+    
     sinceUiUpdate = 0;
     updateSettingsUI(avgTime);
   }
@@ -103,12 +103,12 @@ void updateSettingsUI(unsigned long looptime)
 
 void updateButtonsFromTriggers()
 {
-  bool left = XInput.getTrigger(TRIGGER_LEFT) > 0;
-  bool right = XInput.getTrigger(TRIGGER_RIGHT) > 0;
-  if(XInput.getButton(BUTTON_RB) != right )
-    XInput.setTrigger(TRIGGER_RIGHT, right);
-  if(XInput.getButton(BUTTON_LB) != left )
-    XInput.setTrigger(TRIGGER_LEFT, left);
+  bool bright = XInput.getButton(BUTTON_RB);
+  bool bleft = XInput.getButton(BUTTON_LB);
+  if(bright)
+    XInput.setTrigger(TRIGGER_RIGHT, bright );
+  if(bleft)
+    XInput.setTrigger(TRIGGER_LEFT, bleft);
 }
 
 void updateDigitals()
