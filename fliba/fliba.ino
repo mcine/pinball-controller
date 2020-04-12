@@ -229,7 +229,7 @@ void setupXInput()
   XInput.setAutoSend(false);  
   XInput.begin();
   XInput.setTriggerRange(0, 1);
-  XInput.setJoystickRange(-127, 128);
+  XInput.setJoystickRange(-127, 127);
 }
 
 void setupPins()
